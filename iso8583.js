@@ -51,16 +51,15 @@ module.exports = (incomingBuffer) => {
 
     let msg = buffer.toString('hex')
     let decoded = {}
-    let payload = msg.substring(44, msg.length - 1) //8 (header) + 4 (mti) + 32(bitmaps) = 44
-
+    
     decoded["mti"] = msg.substring(8, 12)
-
+    
     decoded["firstBitmap"] = parseInt(msg.substring(12, 28), 16).toString(2)
     decoded["firstBitmap"] = decoded["firstBitmap"].length == 64 ? decoded["firstBitmap"] : `00${decoded["firstBitmap"]}`
-
+    
     decoded["secondBitmap"] = parseInt(msg.substring(28, 44), 16).toString(2)
     decoded["secondBitmap"] = decoded["secondBitmap"].length == 64 ? decoded["secondBitmap"] : `${'0'.repeat(64 - decoded["secondBitmap"].length)}${decoded["secondBitmap"]}`
-
+    
     let fields = [];
     let i = 1
     for (const c of decoded["firstBitmap"]) {
@@ -76,12 +75,12 @@ module.exports = (incomingBuffer) => {
         }
         j++;
     }
-
+    
+    let payload = msg.substring(44, msg.length - 1) //8 (header) + 4 (mti) + 32(bitmaps) = 44
     let start = 0
-    let end = 0
     fields.forEach((field) => {
         if (fieldsLength[field] > 0) { //fixed length fields
-
+            
             decoded[`field_${field}`] = payload.substr(start, fieldsLength[field])
             start += fieldsLength[field]
 
