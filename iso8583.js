@@ -23,7 +23,7 @@ Field 11 -> 322968
 Field 12 -> 190411095645
 Field 14 -> 0369
 Field 22 -> 353131313031
-Field 31 (LLVAR) -> Legnth 32 -> 
+[...]
 
 */
 /* Example */
@@ -37,7 +37,7 @@ Field 31 (LLVAR) -> Legnth 32 ->
 module.exports = (incomingBuffer) => {
     testBuffer = Buffer.from("010447101200F834040328E0800800000000000000201699001812345678900000000000000010000000000010003229681904110956450369353131313031323133313443203130303030303030303030303030303030303031040123339900181234567890D4912101000007001030303030303030383136313430303030303131313030303030303030303030303132330832383132313938303834300088564231383230313631303235313435333432313133345649313832303136313032353134353334323131333456453138323031363130323531343533343231313334564331383230313631303235313435333432313133340012573F463331332E4430313132", "hex")
 
-    let fieldsLength = [0, 0, 19, 6, 12, 12, 0, 0, 0, 0, 0, 6, 12, 0, 4, 0, 0, 0, 0, 0, 0, 0, 12, 0, 0, 0, 0, 0, 0, 0, 0, -1, 4, 0, 0, 0, 0, 12, 0, 0, 0, 8, 15, -1, 0, 0, 0, 0, 0, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -2, 0, -3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0] //0 = not used, -1 = variable max 2 digits, -2 = variable max 3 digits, -3 = variable max 4 digits
+    let fieldsLength = [0, 0, -1, 6, 12, 12, 0, 0, 0, 0, 0, 6, 12, 0, 4, 0, 0, 0, 0, 0, 0, 0, 12, 0, 0, 0, 0, 0, 0, 0, 0, -1, 4, 0, 0, 0, 0, 12, 0, 0, 0, 8, 15, -1, 0, 0, 0, 0, 0, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -2, 0, -3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0] //0 = not used, -1 = variable max 2 digits, -2 = variable max 3 digits, -3 = variable max 4 digits
 
     // /****DEBUG FIELDS LENGTH ****/
     // /****DEBUG FIELDS LENGTH ****/
@@ -50,35 +50,60 @@ module.exports = (incomingBuffer) => {
     let buffer = incomingBuffer || testBuffer
 
     let msg = buffer.toString('hex')
-    let json = {}
+    let decoded = {}
     let payload = msg.substring(44, msg.length - 1) //8 (header) + 4 (mti) + 32(bitmaps) = 44
 
-    json["mti"] = msg.substring(8, 12)
+    decoded["mti"] = msg.substring(8, 12)
 
-    json["firstBitmap"] = parseInt(msg.substring(12, 28), 16).toString(2)
-    json["firstBitmap"] = json["firstBitmap"].length == 64 ? json["firstBitmap"] : `00${json["firstBitmap"]}`
+    decoded["firstBitmap"] = parseInt(msg.substring(12, 28), 16).toString(2)
+    decoded["firstBitmap"] = decoded["firstBitmap"].length == 64 ? decoded["firstBitmap"] : `00${decoded["firstBitmap"]}`
 
-    json["secondBitmap"] = parseInt(msg.substring(28, 44), 16).toString(2)
-    json["secondBitmap"] = json["secondBitmap"].length == 64 ? json["secondBitmap"] : `${'0'.repeat(64 - json["secondBitmap"].length)}${json["secondBitmap"]}`
+    decoded["secondBitmap"] = parseInt(msg.substring(28, 44), 16).toString(2)
+    decoded["secondBitmap"] = decoded["secondBitmap"].length == 64 ? decoded["secondBitmap"] : `${'0'.repeat(64 - decoded["secondBitmap"].length)}${decoded["secondBitmap"]}`
 
     let fields = [];
     let i = 1
-    for (const c of json["firstBitmap"]) {
+    for (const c of decoded["firstBitmap"]) {
         if (c == 1) {
             fields.push(i)
         }
         i++;
     }
     let j = 65
-    for (const c of json["secondBitmap"]) {
+    for (const c of decoded["secondBitmap"]) {
         if (c == 1) {
             fields.push(j)
         }
         j++;
     }
 
-    console.log(`Fields present: ${fields}`)
+    let start = 0
+    let end = 0
+    fields.forEach((field) => {
+        if (fieldsLength[field] > 0) { //fixed length fields
 
-    json["field_2"] = msg.substring(44, 60)
-    return json
+            decoded[`field_${field}`] = payload.substr(start, fieldsLength[field])
+            start += fieldsLength[field]
+
+        } else if (fieldsLength[field] < 0) { //variable length fields
+            if (fieldsLength[field] == -1) { //variable max 2 digits
+                let length = parseInt(payload.substring(start, start + 2))
+                start = start + 2
+                decoded[`field_${field}`] = payload.substr(start, length)
+                start += length
+            } else if (fieldsLength[field] == -2) { //variable max 3 digits
+                let length = parseInt(payload.substring(start, start + 3))
+                start = start + 3
+                decoded[`field_${field}`] = payload.substr(start, length)
+                start += length
+            } else if (fieldsLength[field] == -3) { //variable max 4 digits
+                let length = parseInt(payload.substring(start, start + 4))
+                start = start + 4
+                decoded[`field_${field}`] = payload.substr(start, length)
+                start += length
+            }
+        }
+    })
+
+    return decoded
 }
