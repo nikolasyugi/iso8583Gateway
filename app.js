@@ -68,7 +68,7 @@ mongoose.connect(keys.dbUrl, { useNewUrlParser: true })
                                         const buyInterval = setInterval(() => {
 
 
-                                            mongoose.connection.db.collection('iso_messages').findOne({ stan: decoded.field_11, confirmed_order: true, buy_order: true, timeout: false, $or: [{ 'tries': 0 }, { 'tries': 1 }] }, function (err, isoFound) {
+                                            mongoose.connection.db.collection('iso_messages').findOne({ stan: decoded.field_11, confirmed_order: true, buy_order: true, timeout: false}, function (err, isoFound) {
                                                 if (!err) {
                                                     if (isoFound) {
                                                         console.log("**************** Success ****************")
