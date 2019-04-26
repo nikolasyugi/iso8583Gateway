@@ -10,67 +10,73 @@ const keys = require('./keys.js')(dotenv);
 
 const iso8583decoder = require('./lib/decoder/iso8583decoder.js')
 const changeMti = require('./lib/decoder/changeMti.js')
-const listenPort = 3030
-const listenIp = '10.8.0.6'
-
-/** Runs test if there's no data available in socket */
-require("./lib/decoder/test.js")(iso8583decoder, changeMti, fs, request);
-/** Runs test if there's no data available in socket */
-
+const listenPort = keys.port
+const listenIp = keys.ip
 
 /** Mongo Connection */
-mongoose.connect(keys.dbUrl, { useNewUrlParser: true });
 mongoose.set('useCreateIndex', true);
-/** Mongo Connection */
+mongoose.connect(keys.dbUrl, { useNewUrlParser: true })
+    .then(() => {
 
-var server = net.createServer(function (socket) {
-    socket.on('data', function (data) {
-
-        const decoded = iso8583decoder(data) //JSON with decoded msg
-
-        console.log("")
-        console.log("")
-        console.log("***********************************************")
-        console.log("**************** Incoming data ****************")
-        console.log(decoded)
-        console.log("**************** Incoming data ****************")
+        /** Runs test if there's no data available in socket */
+        require("./lib/decoder/test.js")(iso8583decoder, changeMti, fs, request);
+        /** Runs test if there's no data available in socket */
 
 
-        request.post({
-            headers: { 'content-type': 'application/json' },
-            url: 'http://powercredit-backend-hmg.herokuapp.com/api/pos',
-            json: true,
-            body: {
-                data: decoded
-            }
-        }, function (error, response, body) {
-            if (body.success) {
-                console.log("**************** Response data ****************")
+        /** TCP Socket */
+        const server = net.createServer(function (socket) {
+            socket.on('data', function (data) {
+
+                const decoded = iso8583decoder(data) //JSON with decoded msg
+
+                console.log("")
+                console.log("")
+                console.log("***********************************************")
+                console.log("**************** Incoming data ****************")
+                console.log(decoded)
+                console.log("**************** Incoming data ****************")
 
 
-                replyMsg = Buffer.from(changeMti("1210", data.toString('hex')), "hex")
-                socket.write(replyMsg);
+                request.post({
+                    headers: { 'content-type': 'application/json' },
+                    url: 'http://powercredit-backend-hmg.herokuapp.com/api/pos',
+                    json: true,
+                    body: {
+                        data: decoded
+                    }
+                }, function (error, response, body) {
+                    if (body.success) {
+                        console.log("**************** Response data ****************")
 
 
-                console.log(replyMsg)
-                console.log("**************** Response data ****************")
-            } else {
-                console.log("**************** Response ERROR ****************")
+                        replyMsg = Buffer.from(changeMti("1210", data.toString('hex')), "hex")
+                        socket.write(replyMsg);
 
 
-                replyMsg = Buffer.from(changeMti("1210", data.toString('hex')), "hex")
-                socket.write(replyMsg);
+                        console.log(replyMsg)
+                        console.log("**************** Response data ****************")
+                    } else {
+                        console.log("**************** Response ERROR ****************")
 
 
-                console.log(replyMsg)
-                console.log("**************** Response ERROR ****************")
-            }
-            console.log(body)
-            console.log("***********************************************")
-            console.log("")
-            console.log("")
+                        replyMsg = Buffer.from(changeMti("1210", data.toString('hex')), "hex")
+                        socket.write(replyMsg);
+
+
+                        console.log(replyMsg)
+                        console.log("**************** Response ERROR ****************")
+                    }
+                    console.log(body)
+                    console.log("***********************************************")
+                    console.log("")
+                    console.log("")
+                });
+            });
         });
-    });
-});
 
-server.listen(listenPort, listenIp);
+        server.listen(listenPort, listenIp);
+        /** TCP Socket */
+    })
+    .catch((err) => {
+        console.log(err)
+    }) 
