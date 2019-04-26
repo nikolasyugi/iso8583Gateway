@@ -10,6 +10,7 @@ const keys = require('./keys.js')(dotenv);
 
 const iso8583decoder = require('./lib/decoder/iso8583decoder.js')
 const changeMti = require('./lib/decoder/changeMti.js')
+const matchIso = require('./lib/decoder/matchIso.js')
 const listenPort = keys.port
 const listenIp = keys.ip
 
@@ -19,7 +20,7 @@ mongoose.connect(keys.dbUrl, { useNewUrlParser: true })
     .then(() => {
 
         /** Runs test if there's no data available in socket */
-        require("./lib/decoder/test.js")(iso8583decoder, changeMti, fs, request);
+        require("./lib/decoder/test.js")(iso8583decoder, changeMti, fs, request, mongoose, keys, matchIso);
         /** Runs test if there's no data available in socket */
 
 
@@ -36,42 +37,52 @@ mongoose.connect(keys.dbUrl, { useNewUrlParser: true })
                 console.log(decoded)
                 console.log("**************** Incoming data ****************")
 
+                let time = 0;
+                const maxTimeout = keys.maxTimeout
 
-                request.post({
-                    headers: { 'content-type': 'application/json' },
-                    url: 'http://powercredit-backend-hmg.herokuapp.com/api/pos',
-                    json: true,
-                    body: {
-                        data: decoded
-                    }
-                }, function (error, response, body) {
-                    if (body.success) {
-                        console.log("**************** Response data ****************")
+                const interval = setInterval(() => {
+                    mongoose.connection.db.collection('iso_messages').findOne({ stan: '322968' }, function (err, isoFound) {
+                        if (!err) {
+                            //While not found wait until timeout
 
+                            if (time >= maxTimeout) {//TIMEOUT
+                                clearInterval(interval);
+                                console.log("**************** Timeout ****************")
+                                replyMsg = Buffer.from(changeMti("1210", data.toString('hex')), "hex")
+                                console.log(replyMsg)
+                                console.log("**************** Timeout ****************")
 
-                        replyMsg = Buffer.from(changeMti("1210", data.toString('hex')), "hex")
-                        socket.write(replyMsg);
+                            } else if (isoFound) {//FOUND ISO IN DB
+                                console.log(isoFound)
 
+                                clearInterval(interval);
+                                if (matchIso(isoFound, decoded)) { //CORRECT ISO
+                                    console.log("**************** Matched ISO ****************")
+                                    replyMsg = Buffer.from(changeMti("1210", data.toString('hex')), "hex")
+                                    console.log(replyMsg)
+                                    console.log("**************** Matched ISO ****************")
 
-                        console.log(replyMsg)
-                        console.log("**************** Response data ****************")
-                    } else {
-                        console.log("**************** Response ERROR ****************")
+                                } else { //WRONG ISO
+                                    console.log("**************** Didn't Match ISO ****************")
+                                    replyMsg = Buffer.from(changeMti("1210", data.toString('hex')), "hex")
+                                    console.log(replyMsg)
+                                    console.log("**************** Didn't Match ISO ****************")
 
+                                }
+                            }
+                        } else {
+                            console.log(err)
+                        }
+                    });
+                    time++;
+                    console.log(maxTimeout - time)
+                }, 2000)
 
-                        replyMsg = Buffer.from(changeMti("1210", data.toString('hex')), "hex")
-                        socket.write(replyMsg);
-
-
-                        console.log(replyMsg)
-                        console.log("**************** Response ERROR ****************")
-                    }
-                    console.log(body)
-                    console.log("***********************************************")
-                    console.log("")
-                    console.log("")
-                });
+                console.log("***********************************************")
+                console.log("")
+                console.log("")
             });
+
         });
 
         server.listen(listenPort, listenIp);
