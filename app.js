@@ -1,7 +1,6 @@
 const modules = require('./modules.js')();
 
 const net = modules.net
-const request = modules.request
 const fs = modules.fs
 const mongoose = modules.mongoose
 const dotenv = modules.dotenv
@@ -20,7 +19,7 @@ mongoose.connect(keys.dbUrl, { useNewUrlParser: true })
     .then(() => {
 
         /** Runs test if there's no data available in socket */
-        require("./lib/decoder/test.js")(iso8583decoder, changeMti, fs, request, mongoose, keys, matchIso);
+        require("./lib/decoder/test.js")(iso8583decoder, changeMti, fs, mongoose, keys, matchIso);
         /** Runs test if there's no data available in socket */
 
 
