@@ -48,6 +48,7 @@ mongoose.connect(keys.dbUrl, { useNewUrlParser: true })
                             if (time >= qrCodeTimeout) {//TIMEOUT
                                 clearInterval(interval);
                                 console.log("**************** Timeout ****************")
+                                mongoose.connection.db.collection('iso_messages').findOneAndUpdate({ stan: decoded.field_11 }, { $set: { timeout: true } }, { upsert: true })
                                 replyMsg = Buffer.from(changeMti("1210", data.toString('hex')), "hex")
                                 console.log(replyMsg)
                                 console.log("**************** Timeout ****************")
@@ -66,17 +67,19 @@ mongoose.connect(keys.dbUrl, { useNewUrlParser: true })
                                         const buyInterval = setInterval(() => {
 
 
-                                            mongoose.connection.db.collection('iso_messages').findOne({ stan: decoded.field_11, confirmed_order: true, buy_order: true }, function (err, isoFound) {
+                                            mongoose.connection.db.collection('iso_messages').findOne({ stan: decoded.field_11, confirmed_order: true, buy_order: true, timeout: false, $or: [{ 'tries': 0 }, { 'tries': 1 }] }, function (err, isoFound) {
                                                 if (!err) {
                                                     if (isoFound) {
                                                         console.log("**************** Success ****************")
-                                                        replyMsg = Buffer.from(changeMti("1210", testMsg), "hex")
+                                                        replyMsg = Buffer.from(changeMti("1210", data.toString('hex')), "hex")
                                                         console.log(replyMsg)
                                                         console.log("**************** Success ****************")
                                                         clearInterval(buyInterval);
                                                     } else if (buyTime >= confirmBuyTimeout) {
                                                         console.log("**************** Timeout ****************")
-                                                        replyMsg = Buffer.from(changeMti("1210", testMsg), "hex")
+                                                        mongoose.connection.db.collection('iso_messages').findOneAndUpdate({ stan: decoded.field_11 }, { $set: { timeout: true } }, { upsert: true })
+
+                                                        replyMsg = Buffer.from(changeMti("1210", data.toString('hex')), "hex")
                                                         console.log(replyMsg)
                                                         console.log("**************** Timeout ****************")
                                                         clearInterval(buyInterval);
