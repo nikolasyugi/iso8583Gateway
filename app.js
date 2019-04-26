@@ -50,6 +50,7 @@ mongoose.connect(keys.dbUrl, { useNewUrlParser: true })
                                 console.log("**************** Timeout ****************")
                                 mongoose.connection.db.collection('iso_messages').findOneAndUpdate({ stan: decoded.field_11 }, { $set: { timeout: true } }, { upsert: true })
                                 replyMsg = Buffer.from(changeMti("1210", data.toString('hex')), "hex")
+                                socket.write(replyMsg);
                                 console.log(replyMsg)
                                 console.log("**************** Timeout ****************")
 
@@ -72,6 +73,7 @@ mongoose.connect(keys.dbUrl, { useNewUrlParser: true })
                                                     if (isoFound) {
                                                         console.log("**************** Success ****************")
                                                         replyMsg = Buffer.from(changeMti("1210", data.toString('hex')), "hex")
+                                                        socket.write(replyMsg);
                                                         console.log(replyMsg)
                                                         console.log("**************** Success ****************")
                                                         clearInterval(buyInterval);
@@ -80,6 +82,7 @@ mongoose.connect(keys.dbUrl, { useNewUrlParser: true })
                                                         mongoose.connection.db.collection('iso_messages').findOneAndUpdate({ stan: decoded.field_11 }, { $set: { timeout: true } }, { upsert: true })
 
                                                         replyMsg = Buffer.from(changeMti("1210", data.toString('hex')), "hex")
+                                                        socket.write(replyMsg);
                                                         console.log(replyMsg)
                                                         console.log("**************** Timeout ****************")
                                                         clearInterval(buyInterval);
@@ -98,6 +101,7 @@ mongoose.connect(keys.dbUrl, { useNewUrlParser: true })
                                 } else { //WRONG ISO
                                     console.log("**************** Didn't Match ISO ****************")
                                     replyMsg = Buffer.from(changeMti("1210", data.toString('hex')), "hex")
+                                    socket.write(replyMsg);
                                     console.log(replyMsg)
                                     console.log("**************** Didn't Match ISO ****************")
 
