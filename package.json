@@ -1,16 +1,18 @@
 {
-  "name": "tcp_socket",
-  "version": "1.0.0",
-  "description": "tcp socket for iso8583",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "dependencies": {
-    "fs": "0.0.1-security",
-    "net": "^1.0.2",
-    "request": "^2.88.0"
-  },
-  "author": "Nikolas Athanasopoulos",
-  "license": "ISC"
+    "name": "tcp_socket",
+    "version": "1.0.0",
+    "description": "tcp socket for iso8583",
+    "main": "app.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "dependencies": {
+        "fs": "0.0.1-security",
+        "mongoose": "^5.5.4",
+        "net": "^1.0.2",
+        "dotenv": "^6.2.0",
+        "request": "^2.88.0"
+    },
+    "author": "Nikolas Athanasopoulos",
+    "license": "ISC"
 }

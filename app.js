@@ -1,6 +1,12 @@
-const net = require('net');
-const request = require('request');
-const fs = require("fs");
+const modules = require('./modules.js')();
+
+const net = modules.net
+const request = modules.request
+const fs = modules.fs
+const mongoose = modules.mongoose
+const dotenv = modules.dotenv
+
+const keys = require('./keys.js')(dotenv);
 
 const iso8583decoder = require('./lib/decoder/iso8583decoder.js')
 const changeMti = require('./lib/decoder/changeMti.js')
@@ -11,6 +17,11 @@ const listenIp = '10.8.0.6'
 require("./lib/decoder/test.js")(iso8583decoder, changeMti, fs, request);
 /** Runs test if there's no data available in socket */
 
+
+/** Mongo Connection */
+mongoose.connect(keys.dbUrl, { useNewUrlParser: true });
+mongoose.set('useCreateIndex', true);
+/** Mongo Connection */
 
 var server = net.createServer(function (socket) {
     socket.on('data', function (data) {
