@@ -48,7 +48,7 @@ mongoose.connect(keys.dbUrl, { useNewUrlParser: true })
                             if (time >= qrCodeTimeout) {//TIMEOUT
                                 clearInterval(interval);
                                 console.log("**************** Timeout ****************")
-                                mongoose.connection.db.collection('iso_messages').findOneAndUpdate({ stan: decoded.field_11 }, { $set: { timeout: true } }, { upsert: true })
+                                mongoose.connection.db.collection('iso_messages').findOneAndUpdate({ stan: decoded.field_11 }, { $set: { timeout: true } })
                                 replyMsg = Buffer.from(changeMti("1210", data.toString('hex')), "hex")
                                 socket.write(replyMsg);
                                 console.log(replyMsg)
@@ -63,7 +63,7 @@ mongoose.connect(keys.dbUrl, { useNewUrlParser: true })
 
                                     let buyTime = 0
 
-                                    mongoose.connection.db.collection('iso_messages').findOneAndUpdate({ stan: decoded.field_11 }, { $set: { confirmed_order: true } }, { upsert: true }, (err, doc) => {
+                                    mongoose.connection.db.collection('iso_messages').findOneAndUpdate({ stan: decoded.field_11 }, { $set: { confirmed_order: true } }, (err, doc) => {
                                         if (err) return console.log(err)
                                         const buyInterval = setInterval(() => {
 
@@ -79,7 +79,7 @@ mongoose.connect(keys.dbUrl, { useNewUrlParser: true })
                                                         clearInterval(buyInterval);
                                                     } else if (buyTime >= confirmBuyTimeout) {
                                                         console.log("**************** Timeout ****************")
-                                                        mongoose.connection.db.collection('iso_messages').findOneAndUpdate({ stan: decoded.field_11 }, { $set: { timeout: true } }, { upsert: true })
+                                                        mongoose.connection.db.collection('iso_messages').findOneAndUpdate({ stan: decoded.field_11 }, { $set: { timeout: true } })
 
                                                         replyMsg = Buffer.from(changeMti("1210", data.toString('hex')), "hex")
                                                         socket.write(replyMsg);
