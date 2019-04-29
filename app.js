@@ -65,7 +65,7 @@ mongoose.connect(keys.dbUrl, { useNewUrlParser: true })
                                 clearInterval(interval);
                                 console.log("**************** Timeout ****************")
                                 mongoose.connection.db.collection('iso_messages').findOneAndUpdate({ stan: decoded.field_11 }, { $set: { timeout: true } })
-                                replyMsg = iso8583encoder(data.toString('hex'), fieldsLength, asciiFields, 38, '000')
+                                replyMsg = iso8583encoder(data.toString('hex'), fieldsLength, asciiFields, 39, '000')
                                 replyMsg = Buffer.from(changeMti("1210", replyMsg), "hex")
 
                                 console.log(replyMsg)
@@ -90,7 +90,7 @@ mongoose.connect(keys.dbUrl, { useNewUrlParser: true })
                                                 if (!err) {
                                                     if (isoFound) {
                                                         console.log("**************** Success ****************")
-                                                        replyMsg = iso8583encoder(data.toString('hex'), fieldsLength, asciiFields, 38, '000')
+                                                        replyMsg = iso8583encoder(data.toString('hex'), fieldsLength, asciiFields, 39, '000')
                                                         replyMsg = Buffer.from(changeMti("1210", replyMsg), "hex")
 
                                                         console.log(replyMsg)
@@ -101,7 +101,7 @@ mongoose.connect(keys.dbUrl, { useNewUrlParser: true })
                                                         console.log("**************** Timeout ****************")
                                                         mongoose.connection.db.collection('iso_messages').findOneAndUpdate({ stan: decoded.field_11 }, { $set: { timeout: true } })
 
-                                                        replyMsg = iso8583encoder(data.toString('hex'), fieldsLength, asciiFields, 38, '000')
+                                                        replyMsg = iso8583encoder(data.toString('hex'), fieldsLength, asciiFields, 39, '000')
                                                         replyMsg = Buffer.from(changeMti("1210", replyMsg), "hex")
 
                                                         console.log(replyMsg)
@@ -122,12 +122,12 @@ mongoose.connect(keys.dbUrl, { useNewUrlParser: true })
 
                                 } else { //WRONG ISO
                                     console.log("**************** Didn't Match ISO ****************")
-                                    replyMsg = iso8583encoder(data.toString('hex'), fieldsLength, asciiFields, 38, '000')
+                                    replyMsg = iso8583encoder(data.toString('hex'), fieldsLength, asciiFields, 39, '000')
                                     replyMsg = Buffer.from(changeMti("1210", replyMsg), "hex")
 
 
                                     console.log(replyMsg)
-                                    fieldsLength[38] = 3
+                                    fieldsLength[39] = 3
                                     console.log(iso8583decoder(Buffer.from(replyMsg, "hex"), fieldsLength, asciiFields))
                                     socket.write(replyMsg)
                                     console.log("**************** Didn't Match ISO ****************")
