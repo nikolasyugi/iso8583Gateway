@@ -6,12 +6,28 @@ const mongoose = modules.mongoose
 const dotenv = modules.dotenv
 
 const keys = require('./keys.js')(dotenv);
-
 const iso8583decoder = require('./lib/decoder/iso8583decoder.js')
-const changeMti = require('./lib/decoder/changeMti.js')
+const iso8583encoder = require('./lib/encoder/iso8583encoder.js')
+const changeMti = require('./lib/encoder/changeMti.js')
 const matchIso = require('./lib/decoder/matchIso.js')
 const listenPort = keys.port
 const listenIp = keys.ip
+
+/* Fields according to docs */
+const fieldsLength = [0, 0, -1, 6, 12, 12, 0, 0, 0, 0, 0, 6, 12, 0, 4, 0, 0, 0, 0, 0, 0, 0, 12, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, 0, 0, 0, 0, 12, 0, 0, 0, 8, 15, -1, 0, 0, 0, 0, 0, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -3, 0, 0, 0, 0, 0] //0 = not used, -1 = variable max 2 digits, -2 = variable max 3 digits, -3 = variable max 4 digits, this array is consistent with provided documentation (array starts with field_0)
+const asciiFields = [22, 31, 37, 41, 42, 43, 49, 50, 61, 63, 123]
+
+// /****DEBUG FIELDS LENGTH ****/
+// /****DEBUG FIELDS LENGTH ****/
+// let fieldsDebug = {}
+// fieldsLength.forEach((element, i) => fieldsDebug[`Field ${i}`] = fieldsLength[i])
+// console.log(fieldsDebug)
+// /****DEBUG FIELDS LENGTH ****/
+// /****DEBUG FIELDS LENGTH ****/
+
+/* Fields according to docs */
+
+
 
 /** Mongo Connection */
 mongoose.set('useCreateIndex', true);
@@ -19,7 +35,7 @@ mongoose.connect(keys.dbUrl, { useNewUrlParser: true })
     .then(() => {
 
         /** Runs test if there's no data available in socket */
-        require("./lib/decoder/test.js")(iso8583decoder, changeMti, fs, mongoose, keys, matchIso);
+        require("./lib/decoder/test.js")(iso8583decoder, iso8583encoder, changeMti, fs, mongoose, keys, matchIso, fieldsLength, asciiFields);
         /** Runs test if there's no data available in socket */
 
 
@@ -27,7 +43,7 @@ mongoose.connect(keys.dbUrl, { useNewUrlParser: true })
         const server = net.createServer(function (socket) {
             socket.on('data', function (data) {
 
-                const decoded = iso8583decoder(data) //JSON with decoded msg
+                const decoded = iso8583decoder(data, fieldsLength, asciiFields) //JSON with decoded msg
 
                 console.log("")
                 console.log("")
@@ -49,9 +65,11 @@ mongoose.connect(keys.dbUrl, { useNewUrlParser: true })
                                 clearInterval(interval);
                                 console.log("**************** Timeout ****************")
                                 mongoose.connection.db.collection('iso_messages').findOneAndUpdate({ stan: decoded.field_11 }, { $set: { timeout: true } })
-                                replyMsg = Buffer.from(changeMti("1210", data.toString('hex')), "hex")
-                                socket.write(replyMsg);
+                                replyMsg = iso8583encoder(data.toString('hex'), fieldsLength, asciiFields, 38, '000')
+                                replyMsg = Buffer.from(changeMti("1210", replyMsg), "hex")
+
                                 console.log(replyMsg)
+                                socket.write(replyMsg);
                                 console.log("**************** Timeout ****************")
 
                             } else if (isoFound) {//FOUND ISO IN DB
@@ -68,22 +86,26 @@ mongoose.connect(keys.dbUrl, { useNewUrlParser: true })
                                         const buyInterval = setInterval(() => {
 
 
-                                            mongoose.connection.db.collection('iso_messages').findOne({ stan: decoded.field_11, confirmed_order: true, buy_order: true, timeout: false}, function (err, isoFound) {
+                                            mongoose.connection.db.collection('iso_messages').findOne({ stan: decoded.field_11, confirmed_order: true, buy_order: true, timeout: false }, function (err, isoFound) {
                                                 if (!err) {
                                                     if (isoFound) {
                                                         console.log("**************** Success ****************")
-                                                        replyMsg = Buffer.from(changeMti("1210", data.toString('hex')), "hex")
-                                                        socket.write(replyMsg);
+                                                        replyMsg = iso8583encoder(data.toString('hex'), fieldsLength, asciiFields, 38, '000')
+                                                        replyMsg = Buffer.from(changeMti("1210", replyMsg), "hex")
+
                                                         console.log(replyMsg)
+                                                        socket.write(replyMsg);
                                                         console.log("**************** Success ****************")
                                                         clearInterval(buyInterval);
                                                     } else if (buyTime >= confirmBuyTimeout) {
                                                         console.log("**************** Timeout ****************")
                                                         mongoose.connection.db.collection('iso_messages').findOneAndUpdate({ stan: decoded.field_11 }, { $set: { timeout: true } })
 
-                                                        replyMsg = Buffer.from(changeMti("1210", data.toString('hex')), "hex")
-                                                        socket.write(replyMsg);
+                                                        replyMsg = iso8583encoder(data.toString('hex'), fieldsLength, asciiFields, 38, '000')
+                                                        replyMsg = Buffer.from(changeMti("1210", replyMsg), "hex")
+
                                                         console.log(replyMsg)
+                                                        socket.write(replyMsg);
                                                         console.log("**************** Timeout ****************")
                                                         clearInterval(buyInterval);
                                                     }
@@ -100,9 +122,14 @@ mongoose.connect(keys.dbUrl, { useNewUrlParser: true })
 
                                 } else { //WRONG ISO
                                     console.log("**************** Didn't Match ISO ****************")
-                                    replyMsg = Buffer.from(changeMti("1210", data.toString('hex')), "hex")
-                                    socket.write(replyMsg);
+                                    replyMsg = iso8583encoder(data.toString('hex'), fieldsLength, asciiFields, 38, '000')
+                                    replyMsg = Buffer.from(changeMti("1210", replyMsg), "hex")
+
+
                                     console.log(replyMsg)
+                                    fieldsLength[38] = 3
+                                    console.log(iso8583decoder(Buffer.from(replyMsg, "hex"), fieldsLength, asciiFields))
+                                    socket.write(replyMsg)
                                     console.log("**************** Didn't Match ISO ****************")
 
                                 }
