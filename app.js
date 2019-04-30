@@ -131,7 +131,7 @@ mongoose.connect(keys.dbUrl, { useNewUrlParser: true })
 
                                     console.log(replyMsg)
                                     fieldsLength[39] = 4
-                                    console.log(iso8583decoder(Buffer.from("00f2"+replyMsg.toString("hex"), "hex"), fieldsLength, asciiFields))
+                                    console.log(iso8583decoder(Buffer.from(replyMsg.toString("hex"), "hex"), fieldsLength, asciiFields))
                                     socket.write(replyMsg)
                                     console.log("**************** Didn't Match ISO ****************")
                                     console.log("")
