@@ -64,7 +64,7 @@ mongoose.connect(keys.dbUrl, { useNewUrlParser: true })
                                 clearInterval(interval);
                                 console.log("**************** Timeout ****************")
                                 mongoose.connection.db.collection('iso_messages').findOneAndUpdate({ stan: decoded.field_11 }, { $set: { timeout: true } })
-                                replyMsg = iso8583encoder(data.toString('hex'), fieldsLength, asciiFields, 39, '0000')
+                                replyMsg = iso8583encoder(data.toString('hex'), fieldsLength, asciiFields, 39, '0001')
                                 replyMsg = Buffer.from(replyMsg, "hex")
 
                                 console.log(replyMsg)
@@ -102,7 +102,7 @@ mongoose.connect(keys.dbUrl, { useNewUrlParser: true })
                                                         console.log("**************** Timeout ****************")
                                                         mongoose.connection.db.collection('iso_messages').findOneAndUpdate({ stan: decoded.field_11 }, { $set: { timeout: true } })
 
-                                                        replyMsg = iso8583encoder(data.toString('hex'), fieldsLength, asciiFields, 39, '0000')
+                                                        replyMsg = iso8583encoder(data.toString('hex'), fieldsLength, asciiFields, 39, '0001')
                                                         replyMsg = Buffer.from(replyMsg, "hex")
 
                                                         console.log(replyMsg)
@@ -125,7 +125,7 @@ mongoose.connect(keys.dbUrl, { useNewUrlParser: true })
 
                                 } else { //WRONG ISO
                                     console.log("**************** Didn't Match ISO ****************")
-                                    replyMsg = iso8583encoder(data.toString('hex'), fieldsLength, asciiFields, 39, '0000')
+                                    replyMsg = iso8583encoder(data.toString('hex'), fieldsLength, asciiFields, 39, '0001')
                                     replyMsg = Buffer.from(replyMsg, "hex")
 
 
