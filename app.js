@@ -85,37 +85,53 @@ mongoose.connect(keys.dbUrl, { useNewUrlParser: true })
                                         const buyInterval = setInterval(() => {
 
 
-                                            mongoose.connection.db.collection('iso_messages').findOne({ stan: decoded.field_11, confirmed_order: true, buy_order: true, timeout: false }, function (err, isoFound) {
-                                                if (!err) {
-                                                    if (isoFound) {
-                                                        console.log("**************** Success ****************")
-                                                        replyMsg = iso8583encoder(data.toString('hex'), fieldsLength, asciiFields, 39, '0000')
-                                                        replyMsg = Buffer.from(replyMsg, "hex")
-
-                                                        console.log(replyMsg)
-                                                        socket.write(replyMsg);
-                                                        console.log("**************** Success ****************")
-                                                        console.log("")
-                                                        console.log("")
-                                                        clearInterval(buyInterval);
-                                                    } else if (buyTime >= confirmBuyTimeout) {
-                                                        console.log("**************** Timeout ****************")
-                                                        mongoose.connection.db.collection('iso_messages').findOneAndUpdate({ stan: decoded.field_11 }, { $set: { timeout: true } })
-
-                                                        replyMsg = iso8583encoder(data.toString('hex'), fieldsLength, asciiFields, 39, '0001')
-                                                        replyMsg = Buffer.from(replyMsg, "hex")
-
-                                                        console.log(replyMsg)
-                                                        socket.write(replyMsg);
-                                                        console.log("**************** Timeout ****************")
-                                                        console.log("")
-                                                        console.log("")
-                                                        clearInterval(buyInterval);
-                                                    }
+                                            mongoose.connection.db.collection('iso_messages').findOne({ stan: decoded.field_11, cancel: true }, function (err, cancelOrder) { //cancel order
+                                                if (cancelOrder) { //CANCEL ORDER
+                                                    clearInterval(buyInterval);
+                                                    replyMsg = iso8583encoder(data.toString('hex'), fieldsLength, asciiFields, 39, '0001')
+                                                    replyMsg = Buffer.from(replyMsg, "hex")
+                                                    
+                                                    
+                                                    console.log("**************** Cancel ****************")
+                                                    console.log(replyMsg)
+                                                    socket.write(replyMsg)
+                                                    console.log("**************** Cancel ****************")
+                                                    console.log("")
+                                                    console.log("")
                                                 } else {
-                                                    console.log(err)
-                                                }
+                                                    mongoose.connection.db.collection('iso_messages').findOne({ stan: decoded.field_11, confirmed_order: true, buy_order: true, timeout: false }, function (err, isoFound) {
+                                                        if (!err) {
+                                                            if (isoFound) {
+                                                                console.log("**************** Success ****************")
+                                                                replyMsg = iso8583encoder(data.toString('hex'), fieldsLength, asciiFields, 39, '0000')
+                                                                replyMsg = Buffer.from(replyMsg, "hex")
 
+                                                                console.log(replyMsg)
+                                                                socket.write(replyMsg);
+                                                                console.log("**************** Success ****************")
+                                                                console.log("")
+                                                                console.log("")
+                                                                clearInterval(buyInterval);
+                                                            } else if (buyTime >= confirmBuyTimeout) {
+                                                                console.log("**************** Timeout ****************")
+                                                                mongoose.connection.db.collection('iso_messages').findOneAndUpdate({ stan: decoded.field_11 }, { $set: { timeout: true } })
+
+                                                                replyMsg = iso8583encoder(data.toString('hex'), fieldsLength, asciiFields, 39, '0001')
+                                                                replyMsg = Buffer.from(replyMsg, "hex")
+
+                                                                console.log(replyMsg)
+                                                                socket.write(replyMsg);
+                                                                console.log("**************** Timeout ****************")
+                                                                console.log("")
+                                                                console.log("")
+                                                                clearInterval(buyInterval);
+                                                            }
+                                                        } else {
+                                                            console.log(err)
+                                                        }
+
+                                                    })
+                                                }
                                             })
                                             buyTime++;
                                             console.log(confirmBuyTimeout - buyTime)
