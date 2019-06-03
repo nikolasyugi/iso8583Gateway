@@ -35,7 +35,7 @@ mongoose.connect(keys.dbUrl, { useNewUrlParser: true })
     .then(() => {
 
         /** Runs test if there's no data available in socket */
-        require("./lib/decoder/test.js")(iso8583decoder, iso8583encoder, fs, mongoose, keys, matchIso, fieldsLength, asciiFields);
+        // require("./lib/decoder/test.js")(iso8583decoder, iso8583encoder, fs, mongoose, keys, matchIso, fieldsLength, asciiFields);
         /** Runs test if there's no data available in socket */
 
 
@@ -44,9 +44,6 @@ mongoose.connect(keys.dbUrl, { useNewUrlParser: true })
             socket.on('data', function (data) {
                 const decoded = iso8583decoder(data, fieldsLength, asciiFields) //JSON with decoded msg
 
-                console.log("")
-                console.log("")
-                console.log("***********************************************")
                 console.log("**************** Incoming data ****************")
                 console.log(decoded)
                 console.log("**************** Incoming data ****************")
@@ -90,8 +87,8 @@ mongoose.connect(keys.dbUrl, { useNewUrlParser: true })
                                                     clearInterval(buyInterval);
                                                     replyMsg = iso8583encoder(data.toString('hex'), fieldsLength, asciiFields, 39, '0001')
                                                     replyMsg = Buffer.from(replyMsg, "hex")
-                                                    
-                                                    
+
+
                                                     console.log("**************** Cancel ****************")
                                                     console.log(replyMsg)
                                                     socket.write(replyMsg)
@@ -168,10 +165,12 @@ mongoose.connect(keys.dbUrl, { useNewUrlParser: true })
             });
 
         });
+        console.log(`Server is on, listening on ${listenIp}:${listenPort}`)
+        console.log("")
 
         server.listen(listenPort, listenIp);
         /** TCP Socket */
     })
-    .catch((err) => {
+    .catch((err) => { //Mongo connection
         console.log(err)
     }) 
