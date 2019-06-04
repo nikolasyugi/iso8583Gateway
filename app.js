@@ -14,7 +14,7 @@ const listenPort = keys.port
 const listenIp = keys.ip
 
 /* Fields according to docs */
-const fieldsLength = [0, 0, -1, 6, 12, 0, 0, 0, 0, 0, 0, 6, 12, 0, 4, 0, 0, 0, 0, 0, 0, 0, 12, 0, 0, 0, 0, 0, 0, 0, 0, -1, -1, 0, 0, 0, 0, 12, 0, 0, 0, 8, 15, -1, 0, 0, 0, 0, 0, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -3, 0, 0, 0, 0, 0] //0 = not used, -1 = variable max 2 digits, -2 = variable max 3 digits, -3 = variable max 4 digits, this array is consistent with provided documentation (array starts with field_0)
+const fieldsLength = require('./fieldsLength.js')()
 const asciiFields = [22, 31, 37, 41, 42, 43, 49, 50, 61, 63, 123]
 
 // /****DEBUG FIELDS LENGTH ****/
