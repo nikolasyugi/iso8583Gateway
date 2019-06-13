@@ -54,9 +54,10 @@ mongoose.connect(keys.dbUrl, { useNewUrlParser: true })
 
                 //insert message in db
                 mongoose.connection.db.collection('iso_messages').insertOne({ stan: decoded.field_11, message: data.toString('hex'), mti: decoded.mti })
+
                 if (decoded.mti == "1420") {
-                    //process message
-                    processReversal(decoded, data, fieldsLength, asciiFields, time, qrCodeTimeout, confirmBuyTimeout, iso8583encoder, matchIso, mongoose, socket, false)
+                    //process message reversal
+                    processReversal(decoded, data, fieldsLength, asciiFields, iso8583encoder, mongoose, socket)
                 } else {
                     //process message
                     processIncomingMessage(decoded, data, fieldsLength, asciiFields, time, qrCodeTimeout, confirmBuyTimeout, iso8583encoder, matchIso, mongoose, socket, false)
