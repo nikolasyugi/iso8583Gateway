@@ -12,6 +12,7 @@ const iso8583encoder = require('./lib/encoder/iso8583encoder.js')
 const changeMti = require('./lib/encoder/changeMti.js')
 const matchIso = require('./lib/decoder/matchIso.js')
 const processIncomingMessage = require('./lib/processIncomingMessage.js')
+const processReversal = require('./lib/processReversal.js')
 
 const listenPort = keys.port
 const listenIp = keys.ip
@@ -52,10 +53,14 @@ mongoose.connect(keys.dbUrl, { useNewUrlParser: true })
                 const confirmBuyTimeout = Math.round(keys.maxTimeout / 2) //time between scan and password input
 
                 //insert message in db
-                mongoose.connection.db.collection('iso_messages').insertOne({ stan: decoded.field_11, message: data.toString('hex'), mti: decoded.mti})
-
-                //process message
-                processIncomingMessage(decoded, data, fieldsLength, asciiFields, time, qrCodeTimeout, confirmBuyTimeout, iso8583encoder, matchIso, mongoose, socket, false)
+                mongoose.connection.db.collection('iso_messages').insertOne({ stan: decoded.field_11, message: data.toString('hex'), mti: decoded.mti })
+                if (decoded.mti == "1420") {
+                    //process message
+                    processReversal(decoded, data, fieldsLength, asciiFields, time, qrCodeTimeout, confirmBuyTimeout, iso8583encoder, matchIso, mongoose, socket, false)
+                } else {
+                    //process message
+                    processIncomingMessage(decoded, data, fieldsLength, asciiFields, time, qrCodeTimeout, confirmBuyTimeout, iso8583encoder, matchIso, mongoose, socket, false)
+                }
 
             });
 
