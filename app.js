@@ -51,6 +51,9 @@ mongoose.connect(keys.dbUrl, { useNewUrlParser: true })
                 const qrCodeTimeout = Math.round(keys.maxTimeout / 2) //time between arrival of pos msg and user scan
                 const confirmBuyTimeout = Math.round(keys.maxTimeout / 2) //time between scan and password input
 
+                //insert message in db
+                mongoose.connection.db.collection('iso_messages').insertOne({ stan: decoded.field_11, message: data.toString('hex'), mti: decoded.mti})
+
                 //process message
                 processIncomingMessage(decoded, data, fieldsLength, asciiFields, time, qrCodeTimeout, confirmBuyTimeout, iso8583encoder, matchIso, mongoose, socket, false)
 
