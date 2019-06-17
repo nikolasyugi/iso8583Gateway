@@ -4,7 +4,8 @@
     "description": "tcp socket for iso8583",
     "main": "app.js",
     "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1"
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "start": "nodemon src/app"
     },
     "dependencies": {
         "dotenv": "^6.2.0",
